@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Sistema de Gestão e Checklist para Oficina Mecânica">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
+    <title>Oficina Mecânica - Sistema de Checklist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #ecf0f1;
+            border-bottom: 2px solid #bdc3c7;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: #ecf0f1;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #d5dbdb;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            margin-left: 10px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            margin-left: 10px;
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            padding: 8px 16px;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .checklist-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .checklist-section h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .checkbox-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .vehicle-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .vehicle-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .vehicle-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .vehicle-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .vehicle-card p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-progress {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-modal {
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .install-prompt {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .install-prompt.show {
+            display: flex;
+        }
+
+        /* ESTILOS PARA IMPRESSÃO */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+
+            header {
+                background: white !important;
+                color: black !important;
+                border-bottom: 3px solid #2c3e50;
+            }
+
+            .tabs, .btn, .close-modal {
+                display: none !important;
+            }
+
+            .modal {
+                display: block !important;
+                position: relative;
+                background: white;
+            }
+
+            .modal-content {
+                max-width: 100%;
+                max-height: none;
+                padding: 20px;
+                box-shadow: none;
+            }
+
+            .print-only {
+                display: block !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .status-badge {
+                border: 2px solid #333;
+            }
+
+            .print-checklist {
+                page-break-inside: avoid;
+            }
+
+            .print-section {
+                margin-bottom: 20px;
+                border: 1px solid #ddd;
+                padding: 15px;
+                page-break-inside: avoid;
+            }
+
+            .print-header {
+                border-bottom: 2px solid #2c3e50;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+            }
+
+            .checkbox-print {
+                display: inline-block;
+                width: 15px;
+                height: 15px;
+                border: 2px solid #333;
+                margin-right: 10px;
+                vertical-align: middle;
+            }
+
+            .checkbox-print.checked::after {
+                content: "✓";
+                display: block;
+                text-align: center;
+                font-weight: bold;
+                line-height: 15px;
+            }
+        }
+
+        .print-only {
+            display: none;
+        }
+
+        /* Aba Compartilhar */
+        .share-container {
+            max-width: 600px;
+            margin-top: 20px;
+        }
+
+        .share-select {
+            margin-bottom: 20px;
+        }
+
+        .share-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .share-link {
+            word-break: break-all;
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .qr-wrapper {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+
+            .vehicle-list {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            body {
+                padding: 10px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Prompt de instalação do PWA -->
+    <div id="installPrompt" class="install-prompt">
+        <div>
+            <strong>📱 Instalar App</strong>
+            <p style="margin: 5px 0 0 0; font-size: 13px;">Adicione à tela inicial para acesso rápido</p>
+        </div>
+        <button class="btn" onclick="installPWA()" style="margin: 0;">Instalar</button>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>🔧 Oficina Mecânica</h1>
+            <p>Sistema de Gestão e Checklist de Veículos</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab(event, 'novo')">Novo Atendimento</button>
+            <button class="tab" onclick="switchTab(event, 'lista')">Lista de Veículos</button>
+            <button class="tab" onclick="switchTab(event, 'compartilhar')">Compartilhar</button>
+        </div>
+
+        <div class="content">
+            <!-- ABA NOVO ATENDIMENTO -->
+            <div id="novo" class="tab-content active">
+                <h2>Cadastro de Novo Atendimento</h2>
+
+                <div id="alertContainer"></div>
+
+                <form id="vehicleForm">
+                    <div class="form-group">
+                        <label>Placa do Veículo *</label>
+                        <input type="text" id="placa" required placeholder="ABC-1234" maxlength="8">
+                        <button type="button" class="btn btn-search" onclick="buscarDadosPlaca()" id="btnBuscar">
+                            🔍 Buscar Dados do Veículo
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Marca *</label>
+                        <input type="text" id="marca" required placeholder="Ex: Toyota, Volkswagen">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Modelo *</label>
+                        <input type="text" id="modelo" required placeholder="Ex: Corolla, Gol">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ano *</label>
+                        <input type="number" id="ano" required placeholder="2020">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cor</label>
+                        <input type="text" id="cor" placeholder="Ex: Prata, Preto">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Quilometragem</label>
+                        <input type="number" id="km" placeholder="50000">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nome do Cliente *</label>
+                        <input type="text" id="cliente" required placeholder="Nome completo">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Telefone *</label>
+                        <input type="tel" id="telefone" required placeholder="(11) 98765-4321">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Observações</label>
+                        <textarea id="observacoes" placeholder="Informações adicionais sobre o veículo ou serviço"></textarea>
+                    </div>
+
+                    <div class="checklist-section">
+                        <h3>Checklist de Serviços</h3>
+
+                        <h4>Motor</h4>
+                        <div class="checkbox-group" id="checklistMotor">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="troca_oleo" value="Troca de óleo">
+                                <label for="troca_oleo">Troca de óleo</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="filtro_oleo" value="Filtro de óleo">
+                                <label for="filtro_oleo">Filtro de óleo</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="filtro_ar" value="Filtro de ar">
+                                <label for="filtro_ar">Filtro de ar</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="filtro_combustivel" value="Filtro de combustível">
+                                <label for="filtro_combustivel">Filtro de combustível</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="velas" value="Velas de ignição">
+                                <label for="velas">Velas de ignição</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="correia" value="Correia dentada">
+                                <label for="correia">Correia dentada</label>
+                            </div>
+                        </div>
+
+                        <h4>Freios</h4>
+                        <div class="checkbox-group" id="checklistFreios">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="pastilhas" value="Pastilhas de freio">
+                                <label for="pastilhas">Pastilhas de freio</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="discos" value="Discos de freio">
+                                <label for="discos">Discos de freio</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="fluido_freio" value="Fluido de freio">
+                                <label for="fluido_freio">Fluido de freio</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="freio_mao" value="Freio de mão">
+                                <label for="freio_mao">Freio de mão</label>
+                            </div>
+                        </div>
+
+                        <h4>Suspensão</h4>
+                        <div class="checkbox-group" id="checklistSuspensao">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="amortecedores" value="Amortecedores">
+                                <label for="amortecedores">Amortecedores</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="molas" value="Molas">
+                                <label for="molas">Molas</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="buchas" value="Buchas">
+                                <label for="buchas">Buchas</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="bandeja" value="Bandeja">
+                                <label for="bandeja">Bandeja</label>
+                            </div>
+                        </div>
+
+                        <h4>Pneus e Rodas</h4>
+                        <div class="checkbox-group" id="checklistPneus">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="alinhamento" value="Alinhamento">
+                                <label for="alinhamento">Alinhamento</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="balanceamento" value="Balanceamento">
+                                <label for="balanceamento">Balanceamento</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="rodizio" value="Rodízio de pneus">
+                                <label for="rodizio">Rodízio de pneus</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="calibragem" value="Calibragem">
+                                <label for="calibragem">Calibragem</label>
+                            </div>
+                        </div>
+
+                        <h4>Elétrica</h4>
+                        <div class="checkbox-group" id="checklistEletrica">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="bateria" value="Bateria">
+                                <label for="bateria">Bateria</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="alternador" value="Alternador">
+                                <label for="alternador">Alternador</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="motor_partida" value="Motor de partida">
+                                <label for="motor_partida">Motor de partida</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="lampadas" value="Lâmpadas">
+                                <label for="lampadas">Lâmpadas</label>
+                            </div>
+                        </div>
+
+                        <h4>Outros</h4>
+                        <div class="checkbox-group" id="checklistOutros">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="ar_condicionado" value="Ar condicionado">
+                                <label for="ar_condicionado">Ar condicionado</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="limpeza_bicos" value="Limpeza de bicos">
+                                <label for="limpeza_bicos">Limpeza de bicos</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="geometria" value="Geometria">
+                                <label for="geometria">Geometria</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="escapamento" value="Escapamento">
+                                <label for="escapamento">Escapamento</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status do Serviço *</label>
+                        <select id="status" required>
+                            <option value="pending">Pendente</option>
+                            <option value="progress">Em Andamento</option>
+                            <option value="completed">Concluído</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn">Salvar Atendimento</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">Limpar Formulário</button>
+                </form>
+            </div>
+
+            <!-- ABA LISTA DE VEÍCULOS -->
+            <div id="lista" class="tab-content">
+                <h2>Veículos Cadastrados</h2>
+                <div id="vehicleList" class="vehicle-list"></div>
+            </div>
+
+            <!-- ABA COMPARTILHAR -->
+            <div id="compartilhar" class="tab-content">
+                <h2>Compartilhar Atendimento com Outro Celular</h2>
+                <div class="share-container">
+                    <div class="form-group share-select">
+                        <label>Selecione o atendimento que deseja compartilhar</label>
+                        <select id="shareSelect" onchange="updateShareInfo()">
+                            <option value="">-- Selecione --</option>
+                        </select>
+                    </div>
+
+                    <div id="shareBox" class="share-box" style="display:none;">
+                        <p><strong>Link para compartilhar:</strong></p>
+                        <div id="shareLink" class="share-link"></div>
+                        <button class="btn btn-secondary" style="margin-top:10px;" onclick="copyShareLink()">Copiar Link</button>
+
+                        <div class="qr-wrapper">
+                            <p style="margin-top:20px;">Ou leia o QR Code abaixo no outro celular:</p>
+                            <canvas id="qrCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" style="margin-top:20px;">
+                        <strong>💡 Dica:</strong> Para funcionar em outro celular, ambos precisam ter este app instalado 
+                        ou acessar o mesmo endereço web. O link carrega os dados automaticamente no formulário.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALHES -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header no-print">
+                <h2>Detalhes do Atendimento</h2>
+                <span class="close-modal" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // ======= CONFIGURAÇÃO PWA =======
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').classList.add('show');
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('PWA instalado');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').classList.remove('show');
+                });
+            }
+        }
+
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => {
+                console.log('Service Worker registrado');
+            }).catch((err) => {
+                console.log('Erro ao registrar Service Worker:', err);
+            });
+        }
+
+        // ======= FUNÇÕES DE ALERTA =======
+        function showAlert(message, type = 'info') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // ======= BUSCA DE DADOS DA PLACA =======
+        async function buscarDadosPlaca() {
+            const placa = document.getElementById('placa').value.trim().toUpperCase();
+
+            if (!placa || placa.length < 7) {
+                showAlert('Digite uma placa válida (mínimo 7 caracteres)', 'error');
+                return;
+            }
+
+            const btnBuscar = document.getElementById('btnBuscar');
+            const originalText = btnBuscar.innerHTML;
+            btnBuscar.disabled = true;
+            btnBuscar.innerHTML = '<span class="loading"></span> Buscando...';
+
+            try {
+                // Usando API pública da Fipe (gratuita)
+                // Nota: Esta API retorna dados limitados. Para dados completos, considere APIs pagas como:
+                // - API PlacaFipe
+                // - API Consulta Placa
+                // - Sinesp (requer credenciais)
+
+                // Aqui vamos simular uma busca e usar uma API alternativa
+                const response = await fetch(`https://brasilapi.com.br/api/fipe/preco/v1/${placa}`);
+
+                if (!response.ok) {
+                    throw new Error('Placa não encontrada');
+                }
+
+                const data = await response.json();
+
+                // Preencher campos automaticamente
+                if (data.length > 0) {
+                    const veiculo = data[0];
+                    document.getElementById('marca').value = veiculo.marca || '';
+                    document.getElementById('modelo').value = veiculo.name || '';
+                    document.getElementById('ano').value = veiculo.anoModelo || '';
+
+                    showAlert('✅ Dados do veículo encontrados e preenchidos!', 'success');
+                } else {
+                    throw new Error('Nenhum dado encontrado');
+                }
+
+            } catch (error) {
+                console.error('Erro na busca:', error);
+
+                // Fallback: tentar API alternativa (simulação)
+                // Em produção, você pode usar múltiplas APIs como fallback
+                showAlert('⚠️ Não foi possível buscar dados automaticamente. Preencha manualmente.', 'error');
+
+                // Exemplo de dados simulados para demonstração
+                // Em produção, remova este bloco ou implemente API paga
+                if (placa.startsWith('ABC')) {
+                    document.getElementById('marca').value = 'Volkswagen';
+                    document.getElementById('modelo').value = 'Gol';
+                    document.getElementById('ano').value = '2020';
+                    document.getElementById('cor').value = 'Prata';
+                    showAlert('ℹ️ Dados de exemplo carregados (modo demonstração)', 'info');
+                }
+            } finally {
+                btnBuscar.disabled = false;
+                btnBuscar.innerHTML = originalText;
+            }
+        }
+
+        // ======= TABELA DE SERVIÇOS DISPONÍVEIS =======
+        const servicosDisponiveis = {
+            'Motor': [
+                'Troca de óleo',
+                'Filtro de óleo',
+                'Filtro de ar',
+                'Filtro de combustível',
+                'Velas de ignição',
+                'Correia dentada'
+            ],
+            'Freios': [
+                'Pastilhas de freio',
+                'Discos de freio',
+                'Fluido de freio',
+                'Freio de mão'
+            ],
+            'Suspensão': [
+                'Amortecedores',
+                'Molas',
+                'Buchas',
+                'Bandeja'
+            ],
+            'Pneus e Rodas': [
+                'Alinhamento',
+                'Balanceamento',
+                'Rodízio de pneus',
+                'Calibragem'
+            ],
+            'Elétrica': [
+                'Bateria',
+                'Alternador',
+                'Motor de partida',
+                'Lâmpadas'
+            ],
+            'Outros': [
+                'Ar condicionado',
+                'Limpeza de bicos',
+                'Geometria',
+                'Escapamento'
+            ]
+        };
+
+        // ======= TROCAR ABAS =======
+        function switchTab(ev, tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+
+            ev.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            if (tabName === 'lista') {
+                loadVehicles();
+            } else if (tabName === 'compartilhar') {
+                loadShareSelect();
+            }
+        }
+
+        // ======= SALVAR ATENDIMENTO =======
+        document.getElementById('vehicleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            const servicos = Array.from(checkboxes).map(cb => cb.value);
+
+            const vehicle = {
+                id: Date.now(),
+                placa: document.getElementById('placa').value.toUpperCase(),
+                marca: document.getElementById('marca').value,
+                modelo: document.getElementById('modelo').value,
+                ano: document.getElementById('ano').value,
+                cor: document.getElementById('cor').value,
+                km: document.getElementById('km').value,
+                cliente: document.getElementById('cliente').value,
+                telefone: document.getElementById('telefone').value,
+                observacoes: document.getElementById('observacoes').value,
+                servicos: servicos,
+                status: document.getElementById('status').value,
+                dataCadastro: new Date().toLocaleString('pt-BR')
+            };
+
+            let vehicles = JSON.parse(localStorage.getItem('vehicles')) || [];
+            vehicles.push(vehicle);
+            localStorage.setItem('vehicles', JSON.stringify(vehicles));
+
+            showAlert('✅ Atendimento cadastrado com sucesso!', 'success');
+            resetForm();
+
+            // Mudar para aba de lista
+            setTimeout(() => {
+                document.querySelector('.tab[onclick*="lista"]').click();
+            }, 1000);
+        });
+
+        // ======= RESET FORM =======
+        function resetForm() {
+            document.getElementById('vehicleForm').reset();
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('alertContainer').innerHTML = '';
+        }
+
+        // ======= CARREGAR LISTA DE VEÍCULOS =======
+        function loadVehicles() {
+            const vehicles = JSON.parse(localStorage.getItem('vehicles')) || [];
+            const listContainer = document.getElementById('vehicleList');
+
+            if (vehicles.length === 0) {
+                listContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Nenhum veículo cadastrado ainda.</p>';
+                return;
+            }
+
+            listContainer.innerHTML = vehicles.map(vehicle => {
+                const statusClass = vehicle.status === 'pending' ? 'status-pending' : 
+                                  vehicle.status === 'progress' ? 'status-progress' : 'status-completed';
+                const statusText = vehicle.status === 'pending' ? 'Pendente' : 
+                                 vehicle.status === 'progress' ? 'Em Andamento' : 'Concluído';
+
+                return `
+                    <div class="vehicle-card" onclick="showDetails(${vehicle.id})">
+                        <h3>${vehicle.marca} ${vehicle.modelo}</h3>
+                        <p><strong>Placa:</strong> ${vehicle.placa}</p>
+                        <p><strong>Cliente:</strong> ${vehicle.cliente}</p>
+                        <p><strong>Ano:</strong> ${vehicle.ano}</p>
+                        <p><strong>Serviços:</strong> ${vehicle.servicos.length} itens</p>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        <p style="font-size: 12px; color: #999; margin-top: 10px;">${vehicle.dataCadastro}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ======= GERAR CHECKLIST PARA IMPRESSÃO =======
+        function generatePrintChecklist(vehicle) {
+            let checklistHTML = '';
+
+            for (const [categoria, servicos] of Object.entries(servicosDisponiveis)) {
+                checklistHTML += `
+                    <div class="print-section">
+                        <h3 style="margin-bottom: 15px; color: #2c3e50; border-bottom: 2px solid #ddd; padding-bottom: 8px;">${categoria}</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                `;
+
+                servicos.forEach(servico => {
+                    const isChecked = vehicle.servicos.includes(servico);
+                    checklistHTML += `
+                        <div style="display: flex; align-items: center; padding: 8px 0;">
+                            <span class="checkbox-print ${isChecked ? 'checked' : ''}"></span>
+                            <span style="font-size: 14px;">${servico}</span>
+                        </div>
+                    `;
+                });
+
+                checklistHTML += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            return checklistHTML;
+        }
+
+        // ======= DETALHES DO ATENDIMENTO =======
+        function showDetails(id) {
+            const vehicles = JSON.parse(localStorage.getItem('vehicles')) || [];
+            const vehicle = vehicles.find(v => v.id === id);
+            if (!vehicle) return;
+
+            const statusClass = vehicle.status === 'pending' ? 'status-pending' : 
+                              vehicle.status === 'progress' ? 'status-progress' : 'status-completed';
+            const statusText = vehicle.status === 'pending' ? 'Pendente' : 
+                             vehicle.status === 'progress' ? 'Em Andamento' : 'Concluído';
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="print-header print-only">
+                    <h1 style="text-align: center; margin-bottom: 10px;">🔧 Oficina Mecânica</h1>
+                    <h2 style="text-align: center; color: #666; font-size: 18px;">Checklist de Serviços</h2>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h3>${vehicle.marca} ${vehicle.modelo}</h3>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+
+                <div class="print-section" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 15px; color: #2c3e50;">Dados do Veículo</h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <p><strong>Placa:</strong> ${vehicle.placa}</p>
+                        <p><strong>Marca:</strong> ${vehicle.marca}</p>
+                        <p><strong>Modelo:</strong> ${vehicle.modelo}</p>
+                        <p><strong>Ano:</strong> ${vehicle.ano}</p>
+                        <p><strong>Cor:</strong> ${vehicle.cor || 'Não informada'}</p>
+                        <p><strong>Quilometragem:</strong> ${vehicle.km ? vehicle.km + ' km' : 'Não informada'}</p>
+                    </div>
+                </div>
+
+                <div class="print-section" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 15px; color: #2c3e50;">Dados do Cliente</h4>
+                    <p><strong>Nome:</strong> ${vehicle.cliente}</p>
+                    <p><strong>Telefone:</strong> ${vehicle.telefone}</p>
+                </div>
+
+                <div class="print-checklist">
+                    <h3 style="margin-bottom: 20px; color: #2c3e50; border-bottom: 3px solid #2c3e50; padding-bottom: 10px;">
+                        Checklist de Serviços
+                    </h3>
+                    ${generatePrintChecklist(vehicle)}
+                </div>
+
+                ${vehicle.observacoes ? `
+                    <div class="print-section" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; margin-top: 20px;">
+                        <h4 style="margin-bottom: 10px; color: #2c3e50;">Observações</h4>
+                        <p style="white-space: pre-wrap;">${vehicle.observacoes}</p>
+                    </div>
+                ` : ''}
+
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #ddd;">
+                    <p style="font-size: 12px; color: #999;">Cadastrado em: ${vehicle.dataCadastro}</p>
+                </div>
+
+                <div class="print-only" style="margin-top: 50px; page-break-inside: avoid;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px;">
+                        <div style="text-align: center;">
+                            <div style="border-top: 2px solid #333; padding-top: 10px; margin-top: 60px;">
+                                <strong>Assinatura do Cliente</strong>
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="border-top: 2px solid #333; padding-top: 10px; margin-top: 60px;">
+                                <strong>Assinatura do Responsável</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="no-print" style="margin-top: 30px;">
+                    <button class="btn btn-print" onclick="printChecklist()">🖨️ Imprimir Checklist</button>
+                    <button class="btn btn-danger" onclick="deleteVehicle(${vehicle.id})">Excluir Atendimento</button>
+                    <button class="btn btn-secondary" onclick="closeModal()">Fechar</button>
+                </div>
+            `;
+
+            document.getElementById('detailsModal').classList.add('active');
+        }
+
+        function printChecklist() {
+            window.print();
+        }
+
+        function closeModal() {
+            document.getElementById('detailsModal').classList.remove('active');
+        }
+
+        function deleteVehicle(id) {
+            if (confirm('Tem certeza que deseja excluir este atendimento?')) {
+                let vehicles = JSON.parse(localStorage.getItem('vehicles')) || [];
+                vehicles = vehicles.filter(v => v.id !== id);
+                localStorage.setItem('vehicles', JSON.stringify(vehicles));
+                closeModal();
+                loadVehicles();
+                showAlert('Atendimento excluído com sucesso', 'success');
+            }
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailsModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        // ======= ABA COMPARTILHAR =======
+        function loadShareSelect() {
+            const vehicles = JSON.parse(localStorage.getItem('vehicles')) || [];
+            const select = document.getElementById('shareSelect');
+            select.innerHTML = '<option value="">-- Selecione --</option>';
+
+            vehicles.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                opt.textContent = `${v.placa} - ${v.marca} ${v.modelo} (${v.cliente})`;
+                select.appendChild(opt);
+            });
+
+            document.getElementById('shareBox').style.display = 'none';
+        }
+
+        function updateShareInfo() {
+            const id = document.getElementById('shareSelect').value;
+            const shareBox = document.getElementById('shareBox');
+            if (!id) {
+                shareBox.style.display = 'none';
+                return;
+            }
+
+            const vehicles = JSON.parse(localStorage.getItem('vehicles')) || [];
+            const vehicle = vehicles.find(v => v.id == id);
+            if (!vehicle) {
+                shareBox.style.display = 'none';
+                return;
+            }
+
+            const json = JSON.stringify(vehicle);
+            const base64 = btoa(encodeURIComponent(json));
+            const url = window.location.origin + window.location.pathname + '?import=' + base64;
+
+            const shareLinkDiv = document.getElementById('shareLink');
+            shareLinkDiv.textContent = url;
+            shareBox.style.display = 'block';
+
+            generateQRCode(url);
+        }
+
+        function copyShareLink() {
+            const text = document.getElementById('shareLink').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('✅ Link copiado para a área de transferência!', 'success');
+            }).catch(() => {
+                showAlert('⚠️ Não foi possível copiar automaticamente. Copie manualmente o link.', 'error');
+            });
+        }
+
+        // ======= IMPORTAR DADOS VIA URL =======
+        function checkImportFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const data = params.get('import');
+            if (!data) return;
+
+            try {
+                const json = decodeURIComponent(atob(data));
+                const vehicle = JSON.parse(json);
+
+                document.getElementById('placa').value = vehicle.placa || '';
+                document.getElementById('marca').value = vehicle.marca || '';
+                document.getElementById('modelo').value = vehicle.modelo || '';
+                document.getElementById('ano').value = vehicle.ano || '';
+                document.getElementById('cor').value = vehicle.cor || '';
+                document.getElementById('km').value = vehicle.km || '';
+                document.getElementById('cliente').value = vehicle.cliente || '';
+                document.getElementById('telefone').value = vehicle.telefone || '';
+                document.getElementById('observacoes').value = vehicle.observacoes || '';
+                document.getElementById('status').value = vehicle.status || 'pending';
+
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+                if (Array.isArray(vehicle.servicos)) {
+                    vehicle.servicos.forEach(s => {
+                        const checkbox = Array.from(document.querySelectorAll('input[type="checkbox"]'))
+                            .find(cb => cb.value === s);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                }
+
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                document.querySelector('.tab').classList.add('active');
+
+                const contents = document.querySelectorAll('.tab-content');
+                contents.forEach(c => c.classList.remove('active'));
+                document.getElementById('novo').classList.add('active');
+
+                showAlert('✅ Atendimento importado via link! Confira os dados e salve.', 'success');
+
+                // Limpar URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } catch (e) {
+                console.error(e);
+                showAlert('❌ Não foi possível importar os dados do link.', 'error');
+            }
+        }
+
+        // ======= QR CODE =======
+        function generateQRCode(text) {
+            const canvas = document.getElementById('qrCanvas');
+            const size = 200;
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, size, size);
+
+            const apiURL = 'https://api.qrserver.com/v1/create-qr-code/?size=' + size + 'x' + size + '&data=' + encodeURIComponent(text);
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, size, size);
+            };
+            img.onerror = function() {
+                ctx.fillStyle = '#000';
+                ctx.font = '14px Arial';
+                ctx.fillText('Erro ao gerar QR', 40, 100);
+            };
+            img.src = apiURL;
+        }
+
+        // ======= FORMATAÇÃO AUTOMÁTICA DE PLACA =======
+        document.getElementById('placa').addEventListener('input', function(e) {
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (value.length > 3) {
+                value = value.slice(0, 3) + '-' + value.slice(3, 7);
+            }
+            e.target.value = value;
+        });
+
+        // ======= INICIALIZAÇÃO =======
+        loadVehicles();
+        checkImportFromURL();
+    </script>
+</body>
+</html>
